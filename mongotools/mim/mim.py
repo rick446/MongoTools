@@ -336,14 +336,14 @@ class Collection(collection.Collection):
             return self.find_one(dict(_id=before['_id']))
         return before
 
-    def insert(self, doc_or_docs, safe=False):
+    def insert(self, doc_or_docs, safe=False, manipulate=True):
         if not isinstance(doc_or_docs, list):
             doc_or_docs = [ doc_or_docs ]
         for doc in doc_or_docs:
             doc = bcopy(doc)
             bson_safe(doc)
             _id = doc.get('_id', ())
-            if _id == ():
+            if _id == () and manipulate:
                 _id = doc['_id'] = bson.ObjectId()
             if _id in self._data:
                 if safe: raise DuplicateKeyError('duplicate ID on insert')

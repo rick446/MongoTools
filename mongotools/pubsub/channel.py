@@ -37,11 +37,11 @@ class Channel(object):
         self._callbacks[re_pattern].append(callback)
 
     def pub(self, key, data=None):
-        self.db[self.name].insert(
-            dict(
-                ts=self._seq.next(self.name),
-                k=key, data=data),
-            manipulate=False)
+        doc = dict(
+            ts=self._seq.next(self.name),
+            k=key, data=data)
+        self.db[self.name].insert(doc, manipulate=False)
+        return doc
 
     def multipub(self, messages):
         last_ts = self._seq.next(self.name, len(messages))
@@ -50,6 +50,7 @@ class Channel(object):
             dict(msg, ts=ts)
             for ts, msg in zip(ts_values, messages) ]
         self.db[self.name].insert(docs, manipulate=False)
+        return docs
 
     def cursor(self, await=False):
         spec = { 'ts': { '$gt': self._position } }
