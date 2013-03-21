@@ -25,7 +25,7 @@ second, but individual clients can't consume messages that fast.)
 
 Here's a simple example of subscriber code:
 
-~~~~
+~~~~python
 # Subscriber
 import time
 import pymongo
@@ -49,7 +49,7 @@ while True:
 
 ... and the publisher:
 
-~~~~
+~~~~python
 # Publisher
 import pymongo
 from mongotools.pubsub import Channel
