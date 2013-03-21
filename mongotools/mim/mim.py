@@ -16,7 +16,7 @@ try:
 except ImportError:
     Runtime = None
 
-from ming.utils import LazyProperty
+from mongotools.util import LazyProperty
 
 import bson
 from pymongo.errors import InvalidOperation, OperationFailure, DuplicateKeyError
