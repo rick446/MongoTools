@@ -23,13 +23,14 @@ class Channel(object):
             self.db.name,
             self.name)
 
-    def ensure_channel(self, capacity=128, message_size=1024):
-        self.db.create_collection(
-            self.name,
-            size=capacity * message_size,
-            capped=True,
-            max=capacity,
-            autoIndexId=False)
+    def ensure_channel(self, capacity=1024, message_size=1024):
+        if self.name not in self.db.collection_names:
+            self.db.create_collection(
+                self.name,
+                size=capacity * message_size,
+                capped=True,
+                max=capacity,
+                autoIndexId=False)
 
     def sub(self, pattern, callback):
         re_pattern = re.compile('^' + re.escape(pattern))
@@ -42,8 +43,18 @@ class Channel(object):
                 k=key, data=data),
             manipulate=False)
 
+    def multipub(self, messages):
+        last_ts = self._seq.next(self.name, len(messages))
+        ts_values = range(last_ts - len(messages), last_ts)
+        docs = [
+            dict(msg, ts=ts)
+            for ts, msg in zip(ts_values, messages) ]
+        self.db[self.name].insert(docs, manipulate=False)
+
     def cursor(self, await=False):
         spec = { 'ts': { '$gt': self._position } }
+        regex = '|'.join(cb.pattern for cb in self._callbacks)
+        spec['k'] = re.compile(regex)
         if await:
             options = dict(
                 tailable=True,
@@ -55,7 +66,6 @@ class Channel(object):
         if await:
             q = q.add_option(_QUERY_OPTIONS['oplog_replay'])
         return q
-        
 
     def handle_ready(self, raise_errors=False, await=False):
         for msg in self.cursor(await):
