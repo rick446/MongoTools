@@ -24,7 +24,7 @@ class Channel(object):
             self.name)
 
     def ensure_channel(self, capacity=1024, message_size=1024):
-        if self.name not in self.db.collection_names:
+        if self.name not in self.db.collection_names():
             self.db.create_collection(
                 self.name,
                 size=capacity * message_size,
@@ -45,7 +45,7 @@ class Channel(object):
 
     def multipub(self, messages):
         last_ts = self._seq.next(self.name, len(messages))
-        ts_values = range(last_ts - len(messages), last_ts)
+        ts_values = range(last_ts - len(messages) + 1, last_ts + 1)
         docs = [
             dict(msg, ts=ts)
             for ts, msg in zip(ts_values, messages) ]

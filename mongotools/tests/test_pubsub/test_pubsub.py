@@ -12,6 +12,7 @@ class TestPubSub(TestCase):
             if not cname.startswith('system.'):
                 self.db[cname].drop()
         self.chan = pubsub.Channel(self.db, 'channel')
+        self.chan.db[self.chan.name].drop()
         self.chan.ensure_channel()
 
     def test_no_index(self):
@@ -45,4 +46,47 @@ class TestPubSub(TestCase):
               dict(ts=2, k='bar', data=None),
               dict(ts=3, k='baz', data=None),
               ])
+
+    def test_multipub(self):
+        messages = []
+        def callback(channel, message):
+            messages.append(message)
+        self.chan.sub('', callback)
+        self.chan.multipub([
+            dict(k='foo', data=None) for x in range(3)])
+        self.assertEqual(messages, [])
+        self.chan.handle_ready()
+        self.assertEqual(
+            messages,
+            [ dict(ts=1, k='foo', data=None),
+              dict(ts=2, k='foo', data=None),
+              dict(ts=3, k='foo', data=None),
+              ])
+        
+    def test_swallow_exc(self):
+        messages = []
+        def callback(channel, message):
+            messages.append(message)
+            raise ValueError,'test error'
+        self.chan.sub('', callback)
+        self.chan.pub('foo')
+        self.assertEqual(messages, [])
+        self.chan.handle_ready()
+        self.assertEqual(messages, [
+                dict(ts=1, k='foo', data=None),
+                ])
+        
+    def test_raise_exc(self):
+        messages = []
+        def callback(channel, message):
+            messages.append(message)
+            raise ValueError,'test error'
+        self.chan.sub('', callback)
+        self.chan.pub('foo')
+        self.assertEqual(messages, [])
+        with self.assertRaises(ValueError):
+            self.chan.handle_ready(raise_errors=True)
+        self.assertEqual(messages, [
+                dict(ts=1, k='foo', data=None),
+                ])
         
