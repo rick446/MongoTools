@@ -1,0 +1,8 @@
+*~
+*.swp
+*.pyc
+*.log
+*.egg-info/*
+.env
+dist/*
+.coverage
