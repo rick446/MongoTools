@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from collections import defaultdict
 
+from pymongo.errors import OperationFailure
 from pymongo.cursor import _QUERY_OPTIONS
 
 from mongotools.sequence import Sequence
@@ -23,7 +24,7 @@ class Channel(object):
             self.db.name,
             self.name)
 
-    def ensure_channel(self, capacity=1024, message_size=1024):
+    def ensure_channel(self, capacity=2**15, message_size=1024):
         if self.name not in self.db.collection_names():
             self.db.create_collection(
                 self.name,
@@ -69,7 +70,17 @@ class Channel(object):
         return q
 
     def handle_ready(self, raise_errors=False, await=False):
-        for msg in self.cursor(await):
+        cursor = self.cursor(await)
+        while True:
+            try:
+                msg = cursor.next()
+            except StopIteration:
+                break
+            except OperationFailure, err:
+                log.warning(
+                    'Error getting messages, may have dropped some: %r',
+                    err)
+                break
             self._position = msg['ts']
             to_call = []
             for pattern, callbacks in self._callbacks.items():
