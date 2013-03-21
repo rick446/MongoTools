@@ -5,6 +5,7 @@
 Options:
   -h --help              show this help message and exit
   -s SECONDS             number of seconds (approx) between prints [default: 1]
+  -t NAME                thread name to watch for events [default: t00]
 """
 import time
 import logging
@@ -17,7 +18,7 @@ def main(args):
     cli = pymongo.MongoClient()
     chan = Channel(cli.test, 'mychannel')
     chan.ensure_channel()
-    chan.sub('t00', Benchmark(float(args['-s'])).handle)
+    chan.sub(args['-t'], Benchmark(float(args['-s'])).handle)
     print 'Begin sub benchmark'
 
     while True:

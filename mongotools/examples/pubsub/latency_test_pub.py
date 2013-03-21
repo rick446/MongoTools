@@ -18,10 +18,10 @@ import docopt
 def main(args):
     import pymongo
     from mongotools.pubsub import Channel
-    cli = pymongo.MongoClient()
+    cli = pymongo.MongoClient(w=0)
     chan = Channel(cli.test, 'mychannel')
     cli.test.mychannel.drop()
-    chan.ensure_channel()
+    chan.ensure_channel(capacity=int(args['--capacity']))
     names = [ 't%.2d' % i for i in range(int(args['-c'])) ]
     threads = [
         threading.Thread(
