@@ -33,9 +33,13 @@ class Channel(object):
                 max=capacity,
                 autoIndexId=False)
 
-    def sub(self, pattern, callback):
+    def sub(self, pattern, callback=None):
         re_pattern = re.compile('^' + re.escape(pattern))
-        self._callbacks[re_pattern].append(callback)
+        def decorator(func):
+            self._callbacks[re_pattern].append(func)
+            return func
+        if callback is None: return decorator
+        return decorator(callback)
 
     def pub(self, key, data=None):
         doc = dict(
