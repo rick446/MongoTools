@@ -35,6 +35,7 @@ class Channel(object):
 
     def sub(self, pattern, callback=None):
         re_pattern = re.compile('^' + re.escape(pattern))
+        self._callbacks[re_pattern] # ensure key exists
         def decorator(func):
             self._callbacks[re_pattern].append(func)
             return func
@@ -58,6 +59,8 @@ class Channel(object):
         return docs
 
     def cursor(self, await=False):
+        if not self._callbacks:
+            return iter([])
         spec = { 'ts': { '$gt': self._position } }
         regex = '|'.join(cb.pattern for cb in self._callbacks)
         spec['k'] = re.compile(regex)

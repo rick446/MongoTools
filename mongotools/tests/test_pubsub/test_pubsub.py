@@ -21,11 +21,13 @@ class TestPubSub(TestCase):
             {})
 
     def test_cursor_explain(self):
+        self.chan.sub('')
         cur = self.chan.cursor()
         plan = cur.explain()
         self.assertEqual(plan['cursor'], 'ForwardCappedCursor')
 
     def test_cursor_await_explain(self):
+        self.chan.sub('')
         cur = self.chan.cursor(await=True)
         plan = cur.explain()
         self.assertEqual(plan['cursor'], 'ForwardCappedCursor')
@@ -90,3 +92,14 @@ class TestPubSub(TestCase):
                 dict(ts=1, k='foo', data=None),
                 ])
         
+    def test_sub_no_callback(self):
+        self.chan.sub('foo')
+        self.chan.pub('foo')
+        ev = self.chan.cursor().next()
+        self.assertEqual(ev['k'], 'foo')
+        self.assertEqual(ev['data'], None)
+
+    def test_no_sub_empty(self):
+        self.chan.pub('foo')
+        with self.assertRaises(StopIteration):
+            print self.chan.cursor().next()
