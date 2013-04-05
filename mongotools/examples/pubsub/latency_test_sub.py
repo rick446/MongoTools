@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Usage:
-        latency-test [options]
+        latency_test_sub.py [options]
 
 Options:
   -h --help              show this help message and exit
@@ -35,7 +35,7 @@ class Benchmark(object):
 
     def handle(self, chan, msg):
         now = time.time()
-        i_latency = now - msg['data']
+        i_latency = now - msg['data']['t']
         self._l_total += i_latency
         self._n_messages += 1
         elapsed = float(now - self._ts_last)
