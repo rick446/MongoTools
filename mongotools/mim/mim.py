@@ -360,7 +360,7 @@ class Collection(collection.Collection):
             self.update({'_id':_id}, doc, upsert=True, safe=safe)
             return _id
 
-    def update(self, spec, updates, upsert=False, safe=False, multi=False):
+    def update(self, spec, updates, upsert=False, safe=False, multi=False, **kwargs):
         bson_safe(spec)
         bson_safe(updates)
         result = dict(
@@ -380,7 +380,7 @@ class Collection(collection.Collection):
             return result
         if upsert:
             doc = dict(spec)
-            MatchDoc(doc).update(updates)
+            MatchDoc(doc).update(updates, **kwargs)
             _id = doc.get('_id', ())
             if _id == ():
                 _id = doc['_id'] = bson.ObjectId()
@@ -700,16 +700,19 @@ class Match(object):
                 if m: return True
             return False
         raise NotImplementedError, op
+
     def getvalue(self, path):
         parts = path.split('.')
         subdoc, key = self.traverse(*parts)
         return subdoc[key]
+
     def get(self, key, default=None):
         try:
             return self[key]
         except KeyError:
             return default
-    def update(self, updates):
+
+    def update(self, updates, **kwargs):
         newdoc = {}
         for k, v in updates.iteritems():
             if k.startswith('$'): break
@@ -734,6 +737,9 @@ class Match(object):
     def _op_set(self, subdoc, key, arg):
         subdoc[key] = bcopy(arg)
         
+    def _op_setOnInsert(self, subdoc, key, arg, **kwargs):
+        subdoc[key] = bcopy(arg)
+
     def _op_push(self, subdoc, key, arg):
         l = subdoc.setdefault(key, [])
         l.append(bcopy(arg))
