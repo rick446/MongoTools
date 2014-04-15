@@ -1,1 +1,1 @@
-from mongtools.semaphore import Semaphore
+from mongotools.semaphore import Semaphore

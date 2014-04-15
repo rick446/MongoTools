@@ -1,1 +1,1 @@
-from .sempahore import Semaphore
+from .semaphore import Semaphore
