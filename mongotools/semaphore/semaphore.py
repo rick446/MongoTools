@@ -1,4 +1,4 @@
-
+ 
 class Semaphore(object):
 
     """docstring for Semaphore"""
@@ -19,3 +19,14 @@ class Semaphore(object):
     def release(self):
         self._db[self._name].update({'_id':self._id, self._counter:{'$lt':self._max}}, {'$inc': {self._counter:1}})
 
+    def peek(self):
+        doc = self._db[self._name].find_one({'_id':self._id})
+        return doc[self._counter]
+
+    def status(self):
+        """
+        Returns True if the the semaphore is available to be acquired (greater than 0),
+        but does not actually acquire the semaphore. 
+        """
+        doc = self._db[self._name].find_one({'_id':self._id})
+        return doc[self._counter] > 0
