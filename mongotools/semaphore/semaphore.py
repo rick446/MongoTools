@@ -19,7 +19,22 @@ class Semaphore(object):
     def release(self):
         self._db[self._name].update({'_id':self._id, self._counter:{'$lt':self._max}}, {'$inc': {self._counter:1}})
 
+    def force_release(self):
+        """
+        Force increment the semaphore counter
+        """
+        self._db[self._name].update(dict(_id=self._id), {'inc': {self._counter:1}})
+
+    def force_acquire(self):
+        """
+        force decrement the semaphore counter
+        """
+        self._db[self._name].update(dict(_id=self._id), {'inc': {self._counter:-1}})
+
     def peek(self):
+        """
+        peek at the counter value without altering it
+        """
         doc = self._db[self._name].find_one({'_id':self._id})
         return doc[self._counter]
 
