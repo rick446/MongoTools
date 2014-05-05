@@ -23,13 +23,13 @@ class Semaphore(object):
         """
         Force increment the semaphore counter
         """
-        self._db[self._name].update(dict(_id=self._id), {'inc': {self._counter:1}})
+        self._db[self._name].update(dict(_id=self._id), {'$inc': {self._counter:1}})
 
     def force_acquire(self):
         """
         force decrement the semaphore counter
         """
-        self._db[self._name].update(dict(_id=self._id), {'inc': {self._counter:-1}})
+        self._db[self._name].update(dict(_id=self._id), {'$inc': {self._counter:-1}})
 
     def peek(self):
         """
